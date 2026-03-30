@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dukaan — Your Neighbourhood Store</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: #fdf8f2;
+    color: #2d2416;
+    font-size: 15px;
+  }
+
+  header {
+    background: #fff;
+    border-bottom: 1px solid #ebe3d8;
+    padding: 0 20px;
+    height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .logo { font-size: 22px; font-weight: 700; color: #d4501a; }
+  .logo span { color: #2d2416; }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff7f2;
+    border: 1.5px solid #f0c9b0;
+    border-radius: 22px;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: #d4501a;
+  }
+  .cart-count {
+    background: #d4501a;
+    color: #fff;
+    border-radius: 50%;
+    width: 20px; height: 20px;
+    font-size: 11px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .cart-count.on { display: flex; }
+
+  .strip {
+    background: #fff7ed;
+    border-bottom: 1px solid #f5ddc8;
+    text-align: center;
+    font-size: 13px;
+    color: #b54d16;
+    padding: 7px 20px;
+    font-weight: 500;
+  }
+
+  .welcome {
+    padding: 20px 20px 8px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  .welcome h1 { font-size: 20px; font-weight: 700; margin-bottom: 3px; }
+  .welcome p { color: #8a7360; font-size: 14px; }
+
+  .page {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 20px;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 16px 20px 40px;
+  }
+  @media(max-width: 750px) { .page { grid-template-columns: 1fr; } }
+
+  .cats { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .cat-btn {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid #e8ddd3;
+    background: #fff;
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #7a6655;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .cat-btn:hover { border-color: #d4501a; color: #d4501a; }
+  .cat-btn.active { background: #d4501a; border-color: #d4501a; color: #fff; }
+
+  .prod-label { font-size: 13px; color: #a0897a; margin-bottom: 10px; font-weight: 500; }
+
+  .product-row {
+    background: #fff;
+    border: 1.5px solid #ebe3d8;
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 10px;
+    transition: border-color 0.15s;
+  }
+  .product-row:hover { border-color: #d4c4b4; }
+  .product-row.incart { border-color: #f0c9b0; background: #fffaf6; }
+
+  .p-emoji { font-size: 30px; width: 44px; text-align: center; flex-shrink: 0; }
+  .p-info { flex: 1; }
+  .p-name { font-size: 15px; font-weight: 600; }
+  .p-meta { font-size: 12px; color: #a0897a; margin-top: 2px; }
+  .p-price-row { display: flex; align-items: center; gap: 6px; margin-top: 5px; }
+  .p-price { font-size: 16px; font-weight: 700; }
+  .p-mrp { font-size: 12px; color: #bba898; text-decoration: line-through; }
+  .p-off { font-size: 11px; color: #2a9e5c; font-weight: 700; background: #eaf7f0; padding: 2px 6px; border-radius: 6px; }
+
+  .add-btn {
+    background: #fff7f2;
+    border: 1.5px solid #f0c9b0;
+    color: #d4501a;
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 7px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .add-btn:hover { background: #ffe8dc; }
+  .add-btn.added { background: #d4501a; color: #fff; border-color: #d4501a; }
+
+  /* CART */
+  .cart-box {
+    background: #fff;
+    border: 1.5px solid #ebe3d8;
+    border-radius: 16px;
+    overflow: hidden;
+    position: sticky;
+    top: 74px;
+  }
+  .cart-head {
+    padding: 14px 18px;
+    border-bottom: 1px solid #ebe3d8;
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .cart-head span { font-size: 12px; color: #a0897a; font-weight: 500; }
+
+  .cart-empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: #bba898;
+  }
+  .cart-empty div:first-child { font-size: 38px; margin-bottom: 8px; }
+  .cart-empty div:last-child { font-size: 14px; line-height: 1.5; }
+
+  .cart-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 16px;
+    border-bottom: 1px solid #f5ede5;
+  }
+  .ci-emoji { font-size: 22px; width: 34px; text-align: center; }
+  .ci-name { font-size: 13px; font-weight: 600; flex: 1; }
+  .ci-unit { font-size: 11px; color: #a0897a; }
+  .qty-ctrl { display: flex; align-items: center; gap: 5px; }
+  .qb {
+    width: 26px; height: 26px;
+    border: 1.5px solid #e8ddd3;
+    border-radius: 8px;
+    background: #fdf8f2;
+    font-size: 15px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: #7a6655;
+    font-weight: 700;
+    transition: all 0.12s;
+    font-family: 'Nunito', sans-serif;
+  }
+  .qb:hover { border-color: #d4501a; color: #d4501a; background: #fff7f2; }
+  .qnum { font-size: 14px; font-weight: 700; min-width: 18px; text-align: center; }
+  .ci-price { font-size: 13px; font-weight: 700; min-width: 50px; text-align: right; }
+  .rm { background: none; border: none; font-size: 14px; color: #cbb8a8; cursor: pointer; margin-left: 2px; }
+  .rm:hover { color: #d4501a; }
+
+  .bill { padding: 14px 18px; border-top: 1px dashed #e8ddd3; }
+  .bill-row { display: flex; justify-content: space-between; font-size: 13px; color: #8a7360; margin-bottom: 7px; }
+  .bill-row.free { color: #2a9e5c; font-weight: 600; }
+  .bill-row.disc { color: #2a9e5c; }
+  .bill-total {
+    display: flex; justify-content: space-between;
+    font-size: 17px; font-weight: 700;
+    margin: 10px 0 14px;
+    padding-top: 10px;
+    border-top: 1.5px solid #ebe3d8;
+  }
+  .pay-btn {
+    width: 100%; padding: 13px;
+    background: #d4501a; color: #fff;
+    border: none; border-radius: 12px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .pay-btn:hover { background: #b84315; }
+  .pay-btn:disabled { background: #e8ddd3; color: #bba898; cursor: default; }
+  .pay-note { font-size: 11px; color: #bba898; text-align: center; margin-top: 8px; }
+
+  .toast {
+    position: fixed; bottom: 20px; left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: #2d2416; color: #fdf8f2;
+    font-size: 13px; font-weight: 500;
+    padding: 9px 20px; border-radius: 99px;
+    opacity: 0; transition: all 0.2s;
+    pointer-events: none; white-space: nowrap; z-index: 999;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">दु<span>kaan</span></div>
+  <div class="header-right" onclick="document.querySelector('.cart-box').scrollIntoView({behavior:'smooth'})">
+    🛒 My Cart
+    <div class="cart-count" id="hbadge">0</div>
+  </div>
+</header>
+
+<div class="strip">🚚 Free delivery on orders above ₹499 &nbsp;·&nbsp; Pay with UPI, card or cash on delivery</div>
+
+<div class="welcome">
+  <h1>Good morning! 👋</h1>
+  <p>Fresh stock just arrived. What are you looking for today?</p>
+</div>
+
+<div class="page">
+
+  <div>
+    <div class="cats" id="cats">
+      <button class="cat-btn active" data-cat="all">🛒 All</button>
+      <button class="cat-btn" data-cat="Snacks">🍿 Snacks</button>
+      <button class="cat-btn" data-cat="Drinks">🥤 Drinks</button>
+      <button class="cat-btn" data-cat="Dairy">🥛 Dairy</button>
+      <button class="cat-btn" data-cat="Staples">🌾 Staples</button>
+      <button class="cat-btn" data-cat="Personal">🧴 Personal</button>
+    </div>
+    <div class="prod-label" id="prod-label">Showing all products</div>
+    <div id="prod-list"></div>
+  </div>
+
+  <div>
+    <div class="cart-box">
+      <div class="cart-head">
+        🧺 Your Bag
+        <span id="item-count">0 items</span>
+      </div>
+      <div id="cart-body">
+        <div class="cart-empty">
+          <div>🛍️</div>
+          <div>Nothing here yet.<br/>Add something!</div>
+        </div>
+      </div>
+      <div id="bill-section" style="display:none;">
+        <div class="bill">
+          <div class="bill-row"><span>Items total</span><span id="b-sub">₹0</span></div>
+          <div class="bill-row disc" id="b-disc-row" style="display:none;"><span>Discount (5%)</span><span id="b-disc">−₹0</span></div>
+          <div class="bill-row" id="b-del-row"><span>Delivery</span><span id="b-del">₹30</span></div>
+          <div class="bill-total"><span>To pay</span><span id="b-total">₹0</span></div>
+          <button class="pay-btn" id="pay-btn">Pay now →</button>
+          <div class="pay-note">UPI · Card · Net banking · Cash on delivery</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ITEMS = [
+  { id:1,  name:"Lay's Classic Salted",   cat:"Snacks",   price:20,  mrp:20,  emoji:"🥔", unit:"26g pack"     },
+  { id:2,  name:"Kurkure Masala Munch",   cat:"Snacks",   price:10,  mrp:10,  emoji:"🌽", unit:"22g pack"     },
+  { id:3,  name:"Parle-G Biscuits",       cat:"Snacks",   price:5,   mrp:5,   emoji:"🍪", unit:"56g pack"     },
+  { id:4,  name:"Hide & Seek Choco",      cat:"Snacks",   price:30,  mrp:35,  emoji:"🍫", unit:"120g"         },
+  { id:5,  name:"Thums Up 750ml",         cat:"Drinks",   price:45,  mrp:45,  emoji:"🥤", unit:"750ml bottle" },
+  { id:6,  name:"Real Juice Mango",       cat:"Drinks",   price:55,  mrp:65,  emoji:"🥭", unit:"1 litre"      },
+  { id:7,  name:"Amul Gold Milk",         cat:"Dairy",    price:31,  mrp:31,  emoji:"🥛", unit:"500ml pouch"  },
+  { id:8,  name:"Mother Dairy Curd",      cat:"Dairy",    price:43,  mrp:45,  emoji:"🫙", unit:"400g"         },
+  { id:9,  name:"Amul Butter",            cat:"Dairy",    price:56,  mrp:60,  emoji:"🧈", unit:"100g"         },
+  { id:10, name:"India Gate Basmati",     cat:"Staples",  price:145, mrp:170, emoji:"🌾", unit:"1kg"          },
+  { id:11, name:"Aashirvaad Atta",        cat:"Staples",  price:68,  mrp:75,  emoji:"🫓", unit:"1kg"          },
+  { id:12, name:"Tata Salt",              cat:"Staples",  price:25,  mrp:28,  emoji:"🧂", unit:"1kg"          },
+  { id:13, name:"Colgate Toothpaste",     cat:"Personal", price:89,  mrp:100, emoji:"🦷", unit:"150g"         },
+  { id:14, name:"Dove Soap",              cat:"Personal", price:49,  mrp:58,  emoji:"🧼", unit:"75g bar"      },
+  { id:15, name:"Head & Shoulders",       cat:"Personal", price:179, mrp:200, emoji:"🧴", unit:"180ml"        },
+];
+
+let cart = {};
+let filter = "all";
+
+function fmt(n) { return "₹" + n.toLocaleString("en-IN"); }
+
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 1600);
+}
+
+function addItem(id) {
+  cart[id] = (cart[id] || 0) + 1;
+  render();
+  toast("Added! 👍");
+}
+
+function changeQty(id, d) {
+  cart[id] = (cart[id] || 0) + d;
+  if (cart[id] <= 0) delete cart[id];
+  render();
+}
+
+function render() {
+  // Products
+  const list = filter === "all" ? ITEMS : ITEMS.filter(i => i.cat === filter);
+  document.getElementById("prod-label").textContent =
+    filter === "all" ? "Showing all " + list.length + " products" : list.length + " items in " + filter;
+
+  document.getElementById("prod-list").innerHTML = list.map(p => {
+    const inCart = !!cart[p.id];
+    const off = p.mrp > p.price ? Math.round((1 - p.price / p.mrp) * 100) : 0;
+    return `
+      <div class="product-row ${inCart ? 'incart' : ''}">
+        <div class="p-emoji">${p.emoji}</div>
+        <div class="p-info">
+          <div class="p-name">${p.name}</div>
+          <div class="p-meta">${p.unit} · ${p.cat}</div>
+          <div class="p-price-row">
+            <div class="p-price">${fmt(p.price)}</div>
+            ${p.mrp > p.price ? `<div class="p-mrp">${fmt(p.mrp)}</div><div class="p-off">${off}% off</div>` : ''}
+          </div>
+        </div>
+        <button class="add-btn ${inCart ? 'added' : ''}" onclick="addItem(${p.id})">
+          ${inCart ? '✓ Added' : '+ Add'}
+        </button>
+      </div>`;
+  }).join("");
+
+  // Cart
+  const ids = Object.keys(cart);
+  const totalQty = Object.values(cart).reduce((a, b) => a + b, 0);
+  const sub = Object.entries(cart).reduce((s, [id, q]) => {
+    const p = ITEMS.find(x => x.id == id);
+    return s + (p ? p.price * q : 0);
+  }, 0);
+  const disc = sub >= 200 ? Math.round(sub * 0.05) : 0;
+  const delivery = sub >= 499 ? 0 : 30;
+  const total = sub - disc + delivery;
+
+  const hb = document.getElementById("hbadge");
+  hb.textContent = totalQty;
+  hb.classList.toggle("on", totalQty > 0);
+  document.getElementById("item-count").textContent = totalQty + " item" + (totalQty !== 1 ? "s" : "");
+
+  const body = document.getElementById("cart-body");
+  const bill = document.getElementById("bill-section");
+
+  if (ids.length === 0) {
+    body.innerHTML = `<div class="cart-empty"><div>🛍️</div><div>Nothing here yet.<br/>Add something!</div></div>`;
+    bill.style.display = "none";
+    return;
+  }
+
+  body.innerHTML = ids.map(id => {
+    const p = ITEMS.find(x => x.id == id);
+    const q = cart[id];
+    return `
+      <div class="cart-item">
+        <div class="ci-emoji">${p.emoji}</div>
+        <div style="flex:1;">
+          <div class="ci-name">${p.name}</div>
+          <div class="ci-unit">${fmt(p.price)} each</div>
+        </div>
+        <div class="qty-ctrl">
+          <button class="qb" onclick="changeQty(${id},-1)">−</button>
+          <span class="qnum">${q}</span>
+          <button class="qb" onclick="changeQty(${id},+1)">+</button>
+        </div>
+        <div class="ci-price">${fmt(p.price * q)}</div>
+        <button class="rm" onclick="changeQty(${id},-${q})">✕</button>
+      </div>`;
+  }).join("");
+
+  bill.style.display = "block";
+  document.getElementById("b-sub").textContent = fmt(sub);
+
+  const discRow = document.getElementById("b-disc-row");
+  discRow.style.display = disc > 0 ? "flex" : "none";
+  document.getElementById("b-disc").textContent = "−" + fmt(disc);
+
+  const delRow = document.getElementById("b-del-row");
+  delRow.className = "bill-row" + (delivery === 0 ? " free" : "");
+  document.getElementById("b-del").textContent = delivery === 0 ? "FREE 🎉" : fmt(delivery);
+  document.getElementById("b-total").textContent = fmt(total);
+}
+
+document.getElementById("cats").addEventListener("click", e => {
+  const btn = e.target.closest(".cat-btn");
+  if (!btn) return;
+  document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  filter = btn.dataset.cat;
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
