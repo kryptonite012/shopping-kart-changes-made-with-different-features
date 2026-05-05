@@ -54,12 +54,6 @@ No frameworks or libraries used — pure frontend.
 
 ## 📂 Project Structure
 
-```
-project-folder/
-│
-├── index.html   # Main file (UI + logic)
-└── README.md    # Project documentation
-```
 
 ---
 
