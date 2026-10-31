@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Dukaan — a neighbourhood grocery store demo with categories, search, a live bill and checkout.">
 <title>Dukaan — Your Neighbourhood Store</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -230,13 +232,23 @@
     pointer-events: none; white-space: nowrap; z-index: 999;
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .search { width: 100%; padding: 10px 14px; border: 1px solid #e5d9c8; border-radius: 10px; font: inherit; margin-bottom: 12px; background: #fff; }
+  .search:focus { outline: 2px solid #e8590c; outline-offset: -1px; }
+  .no-results { text-align: center; color: #888; padding: 24px; }
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 1000; }
+  .modal-bg.show { display: flex; }
+  .modal { background: #fff; border-radius: 14px; padding: 24px; max-width: 380px; width: 100%; text-align: center; }
+  .modal h2 { margin-bottom: 8px; }
+  .modal p { color: #555; margin-bottom: 6px; }
+  .modal button { margin-top: 14px; }
+  .pay-btn:disabled { opacity: .6; cursor: not-allowed; }
 </style>
 </head>
 <body>
 
 <header>
   <div class="logo">दु<span>kaan</span></div>
-  <div class="header-right" onclick="document.querySelector('.cart-box').scrollIntoView({behavior:'smooth'})">
+  <div class="header-right" role="button" tabindex="0" aria-label="Go to cart" onclick="document.querySelector('.cart-box').scrollIntoView({behavior:'smooth'})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
     🛒 My Cart
     <div class="cart-count" id="hbadge">0</div>
   </div>
@@ -245,7 +257,7 @@
 <div class="strip">🚚 Free delivery on orders above ₹499 &nbsp;·&nbsp; Pay with UPI, card or cash on delivery</div>
 
 <div class="welcome">
-  <h1>Good morning! 👋</h1>
+  <h1 id="greeting">Hello! 👋</h1>
   <p>Fresh stock just arrived. What are you looking for today?</p>
 </div>
 
@@ -260,6 +272,7 @@
       <button class="cat-btn" data-cat="Staples">🌾 Staples</button>
       <button class="cat-btn" data-cat="Personal">🧴 Personal</button>
     </div>
+    <input class="search" id="search" type="search" placeholder="Search products…" aria-label="Search products" />
     <div class="prod-label" id="prod-label">Showing all products</div>
     <div id="prod-list"></div>
   </div>
@@ -291,7 +304,17 @@
 
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<div class="modal-bg" id="order-modal" role="dialog" aria-modal="true" aria-labelledby="order-title">
+  <div class="modal">
+    <div style="font-size:42px">🎉</div>
+    <h2 id="order-title">Order placed!</h2>
+    <p id="order-info"></p>
+    <p style="font-size:13px">This is a demo store: no payment was taken.</p>
+    <button class="pay-btn" id="order-close">Continue shopping</button>
+  </div>
+</div>
 
 <script>
 const ITEMS = [
@@ -312,35 +335,52 @@ const ITEMS = [
   { id:15, name:"Head & Shoulders",       cat:"Personal", price:179, mrp:200, emoji:"🧴", unit:"180ml"        },
 ];
 
-let cart = {};
+const CART_KEY = "dukaan.cart";
+let cart = loadCart();
 let filter = "all";
+let query = "";
+
+function loadCart() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CART_KEY)) || {};
+    // keep only products that still exist, with positive whole quantities
+    return Object.fromEntries(Object.entries(saved).filter(([id, q]) => ITEMS.some(i => i.id == id) && Number.isInteger(q) && q > 0));
+  } catch { return {}; }
+}
+function saveCart() { try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch {} }
 
 function fmt(n) { return "₹" + n.toLocaleString("en-IN"); }
 
+let toastTimer;
 function toast(msg) {
   const t = document.getElementById("toast");
   t.textContent = msg;
   t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 1600);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 1600);
 }
 
 function addItem(id) {
+  if ((cart[id] || 0) >= 20) { toast("Max 20 per item"); return; }
   cart[id] = (cart[id] || 0) + 1;
   render();
   toast("Added! 👍");
 }
 
 function changeQty(id, d) {
-  cart[id] = (cart[id] || 0) + d;
+  cart[id] = Math.min(20, (cart[id] || 0) + d);
   if (cart[id] <= 0) delete cart[id];
   render();
 }
 
 function render() {
   // Products
-  const list = filter === "all" ? ITEMS : ITEMS.filter(i => i.cat === filter);
+  saveCart();
+  const q = query.trim().toLowerCase();
+  const list = ITEMS.filter(i => (filter === "all" || i.cat === filter) && (!q || i.name.toLowerCase().includes(q)));
   document.getElementById("prod-label").textContent =
-    filter === "all" ? "Showing all " + list.length + " products" : list.length + " items in " + filter;
+    q ? list.length + " result" + (list.length !== 1 ? "s" : "") + " for “" + query.trim() + "”"
+      : filter === "all" ? "Showing all " + list.length + " products" : list.length + " items in " + filter;
 
   document.getElementById("prod-list").innerHTML = list.map(p => {
     const inCart = !!cart[p.id];
@@ -360,7 +400,7 @@ function render() {
           ${inCart ? '✓ Added' : '+ Add'}
         </button>
       </div>`;
-  }).join("");
+  }).join("") || `<div class="no-results">No products match your search.</div>`;
 
   // Cart
   const ids = Object.keys(cart);
@@ -428,6 +468,34 @@ document.getElementById("cats").addEventListener("click", e => {
   filter = btn.dataset.cat;
   render();
 });
+
+document.getElementById("search").addEventListener("input", e => { query = e.target.value; render(); });
+
+document.getElementById("pay-btn").addEventListener("click", () => {
+  const btn = document.getElementById("pay-btn");
+  const total = document.getElementById("b-total").textContent;
+  const qty = Object.values(cart).reduce((a, b) => a + b, 0);
+  btn.disabled = true;
+  btn.textContent = "Placing order…";
+  setTimeout(() => {
+    const orderId = "DK" + Date.now().toString().slice(-8);
+    document.getElementById("order-info").textContent = `Order ${orderId} · ${qty} item${qty !== 1 ? "s" : ""} · ${total}`;
+    document.getElementById("order-modal").classList.add("show");
+    document.getElementById("order-close").focus();
+    cart = {};
+    render();
+    btn.disabled = false;
+    btn.textContent = "Pay now →";
+  }, 900);
+});
+
+function closeOrder() { document.getElementById("order-modal").classList.remove("show"); }
+document.getElementById("order-close").addEventListener("click", closeOrder);
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeOrder(); });
+
+const hour = new Date().getHours();
+document.getElementById("greeting").textContent =
+  (hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening") + "! 👋";
 
 render();
 </script>

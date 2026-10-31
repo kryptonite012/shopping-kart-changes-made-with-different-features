@@ -24,6 +24,10 @@ Everything runs on the browser — no backend required.
 * 🧮 Automatic price calculation
 * 💸 Discount applied on orders above ₹200
 * 🚚 Free delivery on orders above ₹499
+* 🔍 Live product search
+* 💾 Cart saved in the browser (LocalStorage), so it survives a reload
+* ✅ Checkout flow with an order confirmation (demo, no real payment)
+* 🌅 Greeting that changes with the time of day
 * 📱 Responsive design (works on mobile)
 
 ---
@@ -54,25 +58,37 @@ No frameworks or libraries used — pure frontend.
 
 ## 📂 Project Structure
 
+```
+index.html            the whole app (markup, styles, script)
+.github/workflows/    GitHub Pages deployment
+```
 
 ---
 
 ## 🚀 How to Run
 
-1. Download or clone the project
-2. Open the HTML file in your browser
+Open `index.html` in any modern browser. No install or build step is needed. To serve it over HTTP instead:
 
-That’s it — no setup needed!
+```bash
+python3 -m http.server 8000
+```
+
+## 🌐 Deploy
+
+This repository includes a GitHub Pages workflow (`.github/workflows/pages.yml`).
+
+1. Go to **Settings → Pages** and set **Source** to **GitHub Actions**.
+2. Push to the default branch. The site is published at `https://<username>.github.io/shopping-kart-changes-made-with-different-features/`.
+
+Any static host (Netlify, Vercel, Cloudflare Pages) also works: publish the repository root with no build command.
 
 -----------------------------------------------------------------------------------------
 ## 💡 Future Improvements
 
-* Save cart using LocalStorage
 * Add login/signup system
 * Integrate real payment gateway (UPI / Razorpay)
 * Connect with backend (Node.js + MongoDB)
 * Add product images instead of emojis
-* Search bar functionality
 
 ------------------------------------------------------------------------------------------
 ## 🙌 Final Note
